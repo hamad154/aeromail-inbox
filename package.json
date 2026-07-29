@@ -1,0 +1,12 @@
+{
+  "name": "resend-inbox-dashboard",
+  "version": "1.0.0",
+  "description": "Always-on dashboard to sync and reply to Resend cold emails",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
