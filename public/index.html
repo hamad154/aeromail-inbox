@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroMail Cloud Inbox Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #09090b;
+            --bg-surface: #141416;
+            --bg-element: #1e1e22;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --border: #27272a;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+        }
+
+        header {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto 2rem auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        main {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            main {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.2rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            background-color: var(--bg-element);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 0.7rem;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--border);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .inbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .email-item {
+            background-color: var(--bg-element);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+        }
+
+        .email-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .email-from {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .email-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .email-subject {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            background-color: rgba(139, 92, 246, 0.2);
+            color: #c084fc;
+        }
+
+        .no-emails {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .modal-title h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .modal-title p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .reply-box {
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+        }
+
+        .reply-box textarea {
+            width: 100%;
+            background-color: var(--bg-element);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 1rem;
+            font-size: 0.9rem;
+            min-height: 150px;
+            resize: vertical;
+            margin-bottom: 1rem;
+            font-family: inherit;
+        }
+
+        .reply-box textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .info-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            background-color: var(--bg-element);
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AeroMail Cloud Inbox Hub</h1>
+        <button id="sync-btn" class="btn" style="width: auto;">Sync Inbound Emails</button>
+    </header>
+
+    <main>
+        <!-- Sidebar: Keys configuration -->
+        <section class="card">
+            <h2>API Config & Domains</h2>
+            <div class="form-group">
+                <label>API Key #1 (toolquix.cloud-ip.cc)</label>
+                <input type="password" id="key-1" placeholder="re_...">
+            </div>
+            <div class="form-group">
+                <label>API Key #2 (hamadhassan.abrdns.com)</label>
+                <input type="password" id="key-2" placeholder="re_...">
+            </div>
+            <div class="form-group">
+                <label>API Key #3 (hamad.abrdns.com)</label>
+                <input type="password" id="key-3" placeholder="re_...">
+            </div>
+            <div class="form-group">
+                <label>API Key #4 (hamad.cloud-ip.cc)</label>
+                <input type="password" id="key-4" placeholder="re_...">
+            </div>
+            <button id="save-keys-btn" class="btn">Save Keys locally</button>
+        </section>
+
+        <!-- Main Workspace: Inbound replies list -->
+        <section class="card">
+            <h2>Inbound Emails & Replies</h2>
+            <div id="emails-container" class="inbox-list">
+                <div class="no-emails">Configure your API keys on the left, then click 'Sync Inbound Emails'.</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Email Modal -->
+    <div id="email-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3 id="modal-subject">Subject</h3>
+                    <p id="modal-meta">From: ... | Date: ...</p>
+                </div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="info-pill">
+                <span>Domain sender configured for reply:</span>
+                <strong id="sender-domain-pill">...</strong>
+            </div>
+
+            <div class="reply-box">
+                <textarea id="reply-text" placeholder="Type your reply to this client here..."></textarea>
+                <button id="send-reply-btn" class="btn">Send Reply</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const domains = [
+            'toolquix.cloud-ip.cc',
+            'hamadhassan.abrdns.com',
+            'hamad.abrdns.com',
+            'hamad.cloud-ip.cc'
+        ];
+
+        let loadedReplies = [];
+        let activeEmail = null;
+
+        // Load saved keys from localStorage
+        window.addEventListener('DOMContentLoaded', () => {
+            for (let i = 1; i <= 4; i++) {
+                const savedKey = localStorage.getItem(`resend_key_${i}`);
+                if (savedKey) {
+                    document.getElementById(`key-${i}`).value = savedKey;
+                }
+            }
+        });
+
+        // Save keys handler
+        document.getElementById('save-keys-btn').addEventListener('click', () => {
+            for (let i = 1; i <= 4; i++) {
+                const val = document.getElementById(`key-${i}`).value.trim();
+                localStorage.setItem(`resend_key_${i}`, val);
+            }
+            alert('API Keys saved locally in your browser!');
+        });
+
+        // Sync button handler
+        document.getElementById('sync-btn').addEventListener('click', async () => {
+            const apiKeys = [];
+            for (let i = 1; i <= 4; i++) {
+                apiKeys.push(document.getElementById(`key-${i}`).value.trim());
+            }
+
+            const syncBtn = document.getElementById('sync-btn');
+            syncBtn.disabled = true;
+            syncBtn.innerText = 'Syncing...';
+
+            try {
+                const response = await fetch('/api/check-replies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiKeys })
+                });
+                const result = await response.json();
+                
+                if (result.replies) {
+                    loadedReplies = result.replies;
+                    renderEmails();
+                } else {
+                    alert('Failed to sync: ' + (result.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Connection error: ' + e.message);
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.innerText = 'Sync Inbound Emails';
+            }
+        });
+
+        function renderEmails() {
+            const container = document.getElementById('emails-container');
+            if (loadedReplies.length === 0) {
+                container.innerHTML = '<div class="no-emails">No inbound emails found across all verified domains.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            loadedReplies.forEach((email, idx) => {
+                const domainName = domains[email.keyIndex - 1];
+                const dateStr = new Date(email.created_at).toLocaleString();
+                
+                const item = document.createElement('div');
+                item.className = 'email-item';
+                item.onclick = () => openEmail(idx);
+                item.innerHTML = `
+                    <div class="email-header">
+                        <span class="email-from">${email.from}</span>
+                        <span class="email-date">${dateStr}</span>
+                    </div>
+                    <div class="email-subject">${email.subject}</div>
+                    <span class="badge">To Key #${email.keyIndex} (${domainName})</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function openEmail(idx) {
+            activeEmail = loadedReplies[idx];
+            const domainName = domains[activeEmail.keyIndex - 1];
+            const dateStr = new Date(activeEmail.created_at).toLocaleString();
+
+            document.getElementById('modal-subject').innerText = activeEmail.subject;
+            document.getElementById('modal-meta').innerText = `From: ${activeEmail.from} | Date: ${dateStr}`;
+            
+            // Set sender domain details
+            document.getElementById('sender-domain-pill').innerText = `Hamad Hassan <hamadhassan@${domainName}>`;
+            document.getElementById('reply-text').value = '';
+
+            document.getElementById('email-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('email-modal').style.display = 'none';
+            activeEmail = null;
+        }
+
+        // Send reply handler
+        document.getElementById('send-reply-btn').addEventListener('click', async () => {
+            if (!activeEmail) return;
+
+            const text = document.getElementById('reply-text').value.trim();
+            if (!text) {
+                alert('Please type a reply.');
+                return;
+            }
+
+            const sendBtn = document.getElementById('send-reply-btn');
+            sendBtn.disabled = true;
+            sendBtn.innerText = 'Sending...';
+
+            const domainName = domains[activeEmail.keyIndex - 1];
+            const fromField = `Hamad Hassan <hamadhassan@${domainName}>`;
+            const replySubject = activeEmail.subject.toLowerCase().startsWith('re:') 
+                ? activeEmail.subject 
+                : 'Re: ' + activeEmail.subject;
+
+            try {
+                const response = await fetch('/api/send-reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        apiKey: activeEmail.apiKey,
+                        from: fromField,
+                        to: activeEmail.from,
+                        subject: replySubject,
+                        text: text
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Reply sent successfully!');
+                    closeModal();
+                } else {
+                    alert('Failed to send: ' + JSON.stringify(result.error));
+                }
+            } catch (e) {
+                alert('Connection error: ' + e.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerText = 'Send Reply';
+            }
+        });
+    </script>
+</body>
+</html>
